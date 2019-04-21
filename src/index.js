@@ -4,7 +4,6 @@ import './assets/scss/styles.scss';
 const SECOND = 1000;
 const MINUTE = 60 * SECOND;
 const DAY = 24 * 60 * MINUTE;
-
 class App {
   constructor() {
     this.getHistory = App.getHistory.bind(this);
@@ -12,6 +11,7 @@ class App {
     this.startTimer = this.startTimer.bind(this);
     this.updateTimer = this.updateTimer.bind(this);
     this.stopTimer = this.stopTimer.bind(this);
+    this.pauseTimer = this.pauseTimer.bind(this);
     this.displayTime = this.displayTime.bind(this);
     this.saveIntervalData = this.saveIntervalData.bind(this);
     this.displayCyclesToday = this.displayCyclesToday.bind(this);
@@ -25,6 +25,7 @@ class App {
     this.displayHistory();
     this.removeOldHistory();
   }
+
 
   static getHistory() {
     const items = localStorage.getItem('intervalData');
@@ -54,6 +55,7 @@ class App {
     this.historyDisplay = document.getElementById('history');
     this.startButton = document.getElementById('start-button');
     this.stopButton = document.getElementById('stop-button');
+    this.pauseButton = document.getElementById('pause-button');
   }
 
   resetValues() {
@@ -61,13 +63,17 @@ class App {
     this.breakLength = 5;
     this.startAt = null;
     this.endAt = null;
+    this.pauseAt = null;
     this.isTimerStopped = true;
     this.onWork = true;
+    this.tempCycles = 0;
+    this.longBreakLength = 15;
   }
 
   toggleEvents() {
     this.startButton.addEventListener('click', this.startTimer);
     this.stopButton.addEventListener('click', this.stopTimer);
+    this.pauseButton.addEventListener('click', this.pauseTimer);
   }
 
   saveIntervalData(momentItem) {
@@ -81,10 +87,16 @@ class App {
     if (e) e.preventDefault();
     this.startButton.disabled = true;
     this.stopButton.disabled = false;
-    this.isTimerStopped = false;
-    this.startAt = time;
-    const startAtClone = moment(this.startAt);
-    this.endAt = startAtClone.add(this.workLength, 'minutes');
+    this.pauseButton.disabled = false;
+    if (this.pausedAt) {
+      const diff = moment(time).diff(this.pausedAt);
+      this.endAt = this.endAt.add(diff, 'millisecond');
+    } else {
+      this.isTimerStopped = false;
+      this.startAt = time;
+      const startAtClone = moment(this.startAt);
+      this.endAt = startAtClone.add(this.workLength, 'minutes');
+    }
     this.timerUpdater = window.setInterval(this.updateTimer, 500);
     // タイムラグがあるので、0.5秒ごとにアップデートします。
     this.displayTime();
@@ -93,6 +105,7 @@ class App {
   updateTimer(time = moment()) {
     const rest = this.endAt.diff(time);
     if (rest <= 0) {
+      let endAt;
       if (this.onWork) {
         this.saveIntervalData(time);
         this.displayCyclesToday();
@@ -100,8 +113,19 @@ class App {
       }
       this.onWork = !this.onWork;
       this.startAt = time;
-      this.endAt = this.onWork ? moment(time).add(this.workLength, 'minutes')
-        : moment(time).add(this.breakLength, 'minutes');
+      if (this.onWork) {
+        endAt = moment(time).add(this.workLength, 'minutes');
+      }
+      if (!this.onWork) {
+        if (this.tempCycles === 3) {
+          endAt = moment(time).add(this.longBreakLength, 'minutes');
+          this.tempCycles = 0;
+        } else {
+          endAt = moment(time).add(this.breakLength, 'minutes');
+          this.tempCycles += 1;
+        }
+      }
+      this.endAt = endAt;
     }
     this.displayTime(time);
   }
@@ -111,9 +135,20 @@ class App {
     this.resetValues();
     this.startButton.disabled = false;
     this.stopButton.disabled = true;
+    this.pauseButton.disabled = true;
     window.clearInterval(this.timerUpdater);
     this.timerUpdater = null;
     this.displayTime();
+  }
+
+  pauseTimer(e = null, time = moment()) {
+    if (e) e.preventDefault();
+    this.startButton.disabled = false;
+    this.stopButton.disabled = true;
+    this.pauseButton.disabled = true;
+    this.pausedAt = time;
+    window.clearInterval(this.timerUpdater);
+    this.timerUpdater = null;
   }
 
   displayTime(time = moment()) {
