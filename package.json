@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "build": "webpack",
-    "dev-server": "webpack-dev-server",
+    "build-dev": "BUILD_ENV=dev webpack -p --colors --display-error-details",
+    "build-prod": "BUILD_ENV=prod webpack -p --colors --display-error-details",
+    "dev-server": "BUILD_ENV=dev webpack-dev-server",
     "test": "jest --watchAll"
   },
   "jest": {
@@ -43,6 +45,8 @@
     "webpack-dev-server": "^3.1.4"
   },
   "dependencies": {
+    "dotenv": "^7.0.0",
+    "firebase": "^5.10.1",
     "moment": "^2.22.2"
   }
 }

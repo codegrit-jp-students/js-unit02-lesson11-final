@@ -11,6 +11,19 @@
   <div class="app-wrapper">
     <header>
       <div class="container">
+        <div class="userform card card-body mb-4">
+          <div class="p-2 font-weight-bold" >ユーザー登録/ログイン</div>
+          <div class="p-2" id="userState"></div>
+          <div class="p-2">メールアドレス</div>
+          <input type="email" class="form-control" id="email" placeholder="Email">
+          <div class="p-2">パスワード</div>
+          <input type="password" class="form-control mb-3" id="password" placeholder="Password">
+          <div class="row pl-3">
+            <button type="regist" class="btn btn-success m-1" id="signUp-button">登録</button>
+            <button type="submit" class="btn btn-warning text-white m-1" id="signIn-button">ログイン</button>
+            <button type="submit" class="btn btn-danger text-white d-none m-1" id="signOut-button">ログアウト</button>
+          </div>
+        </div>
       </div>
     </header>
     <main>
@@ -65,5 +78,6 @@
     </footer>
   </div>
   <script src="./bundle.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/5.8.4/firebase-app.js"></script>
 </body>
 </html>

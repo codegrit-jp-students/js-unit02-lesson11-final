@@ -1,9 +1,11 @@
 import moment from 'moment';
 import './assets/scss/styles.scss';
+import FirebaseAuth from './firebaseAuth';
 
 const SECOND = 1000;
 const MINUTE = 60 * SECOND;
 const DAY = 24 * 60 * MINUTE;
+const fbAuth = new FirebaseAuth();
 class App {
   constructor() {
     this.getHistory = App.getHistory.bind(this);
@@ -24,6 +26,7 @@ class App {
     this.displayCyclesToday();
     this.displayHistory();
     this.removeOldHistory();
+    window.onload = fbAuth.userState();
   }
 
 
@@ -56,6 +59,9 @@ class App {
     this.startButton = document.getElementById('start-button');
     this.stopButton = document.getElementById('stop-button');
     this.pauseButton = document.getElementById('pause-button');
+    this.signupButton = document.getElementById('signUp-button');
+    this.signInButton = document.getElementById('signIn-button');
+    this.signOutButton = document.getElementById('signOut-button');
   }
 
   resetValues() {
@@ -74,6 +80,9 @@ class App {
     this.startButton.addEventListener('click', this.startTimer);
     this.stopButton.addEventListener('click', this.stopTimer);
     this.pauseButton.addEventListener('click', this.pauseTimer);
+    this.signupButton.addEventListener('click', fbAuth.signUp);
+    this.signInButton.addEventListener('click', fbAuth.signIn);
+    this.signOutButton.addEventListener('click', fbAuth.signOut);
   }
 
   saveIntervalData(momentItem) {
