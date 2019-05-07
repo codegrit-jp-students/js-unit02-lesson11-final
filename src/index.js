@@ -1,11 +1,12 @@
+/* eslint-disable class-methods-use-this */
 import moment from 'moment';
 import './assets/scss/styles.scss';
-import FirebaseAuth from './firebaseAuth';
+import Firebase from './firebase';
 
 const SECOND = 1000;
 const MINUTE = 60 * SECOND;
 const DAY = 24 * 60 * MINUTE;
-const fbAuth = new FirebaseAuth();
+const firebase = new Firebase();
 class App {
   constructor() {
     this.getHistory = App.getHistory.bind(this);
@@ -18,6 +19,7 @@ class App {
     this.saveIntervalData = this.saveIntervalData.bind(this);
     this.displayCyclesToday = this.displayCyclesToday.bind(this);
     this.displayHistory = this.displayHistory.bind(this);
+    this.userState = firebase.userState.bind(this);
 
     this.resetValues();
     this.getElements();
@@ -26,7 +28,7 @@ class App {
     this.displayCyclesToday();
     this.displayHistory();
     this.removeOldHistory();
-    window.onload = fbAuth.userState();
+    this.showUserState();
   }
 
 
@@ -65,8 +67,8 @@ class App {
   }
 
   resetValues() {
-    this.workLength = 25;
-    this.breakLength = 5;
+    this.workLength = 0.1;
+    this.breakLength = 0.1;
     this.startAt = null;
     this.endAt = null;
     this.pauseAt = null;
@@ -80,9 +82,74 @@ class App {
     this.startButton.addEventListener('click', this.startTimer);
     this.stopButton.addEventListener('click', this.stopTimer);
     this.pauseButton.addEventListener('click', this.pauseTimer);
-    this.signupButton.addEventListener('click', fbAuth.signUp);
-    this.signInButton.addEventListener('click', fbAuth.signIn);
-    this.signOutButton.addEventListener('click', fbAuth.signOut);
+    this.signupButton.addEventListener('click', this.showSignUp);
+    this.signInButton.addEventListener('click', this.showSignIn);
+    this.signOutButton.addEventListener('click', this.showSignOut);
+  }
+
+  async showUserRecord() {
+    const collection = await firebase.readDB();
+    console.log(collection[0]);
+  }
+
+  async showUserState() {
+    await firebase.userState()
+      .then((user) => {
+        document.getElementById('userState').innerText = `ログイン済(email: ${user.email})`;
+        document.getElementById('signIn-button').classList.add('d-none');
+        document.getElementById('signUp-button').classList.add('d-none');
+        document.getElementById('signOut-button').classList.remove('d-none');
+        document.getElementById('userInput').classList.add('d-none');
+      })
+      .catch(() => {
+        document.getElementById('userState').innerText = '未ログイン';
+      });
+    this.showUserRecord();
+  }
+
+  showSignIn() {
+    firebase.signIn()
+      .then((email) => {
+        document.getElementById('userState').innerText = `ログイン済(email: ${email})`;
+        document.getElementById('signIn-button').classList.add('d-none');
+        document.getElementById('signUp-button').classList.add('d-none');
+        document.getElementById('signOut-button').classList.remove('d-none');
+        document.getElementById('userInput').classList.add('d-none');
+      })
+      .catch((error) => {
+        const errorMessage = error.message;
+        document.getElementById('userState').innerText = `サインイン失敗: ${errorMessage}`;
+      });
+  }
+
+  showSignUp() {
+    firebase.signUp()
+      .then((email) => {
+        document.getElementById('userState').innerText = `ログイン済(email: ${email})`;
+        document.getElementById('signIn-button').classList.add('d-none');
+        document.getElementById('signUp-button').classList.add('d-none');
+        document.getElementById('signOut-button').classList.remove('d-none');
+        document.getElementById('userInput').classList.add('d-none');
+      })
+      .catch((error) => {
+        const errorMessage = error.message;
+        document.getElementById('userState').innerText = `サインアップ失敗: ${errorMessage}`;
+      });
+  }
+
+  showSignOut() {
+    firebase.signOut()
+      .then(() => {
+        document.getElementById('userState').innerText = '未ログイン';
+        document.getElementById('signIn-button').classList.remove('d-none');
+        document.getElementById('signUp-button').classList.remove('d-none');
+        document.getElementById('userInput').classList.remove('d-none');
+        document.getElementById('signOut-button').classList.add('d-none');
+      })
+      .catch((error) => {
+        const errorMessage = error.message;
+        document.getElementById('userState').innerText = `サインアウト失敗: ${errorMessage}`;
+      });
   }
 
   saveIntervalData(momentItem) {
@@ -109,6 +176,7 @@ class App {
     this.timerUpdater = window.setInterval(this.updateTimer, 500);
     // タイムラグがあるので、0.5秒ごとにアップデートします。
     this.displayTime();
+    // firebase.writeDB();
   }
 
   updateTimer(time = moment()) {
@@ -132,6 +200,13 @@ class App {
         } else {
           endAt = moment(time).add(this.breakLength, 'minutes');
           this.tempCycles += 1;
+          const collection = this.getHistory();
+          const startOfToday = time.startOf('day');
+          const filterItems = collection.filter(item => (
+            parseInt(item, 10) >= startOfToday.valueOf()
+          ));
+          const count = filterItems.length;
+          firebase.writeDB(count, moment().format('YYYY-MM-DD'));
         }
       }
       this.endAt = endAt;
