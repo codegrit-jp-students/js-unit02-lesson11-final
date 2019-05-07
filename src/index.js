@@ -87,8 +87,9 @@ class App {
     this.signOutButton.addEventListener('click', this.showSignOut);
   }
 
-  async showUserRecord() {
-    const collection = await firebase.readDB();
+  // 過去の記録を取得
+  showUserRecord() {
+    const collection = firebase.readDB();
     console.log(collection[0]);
   }
 

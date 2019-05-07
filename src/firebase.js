@@ -52,6 +52,7 @@ export default class {
     });
   }
 
+  // DBに本日の記録を書き込む
   writeDB(value, day) {
     const { uid } = firebase.auth().currentUser;
     firebase
@@ -60,9 +61,11 @@ export default class {
       .set(value);
   }
 
+  // DBから記録を取得する
   readDB() {
     const { uid } = firebase.auth().currentUser;
     const dayCounts = [];
+    // 8日分取得する 0番目は本日の記録 1~7番目が過去の記録
     for (let i = 0; i < 8; i += 1) {
       const days = moment().subtract(i, 'days').format('YYYY-MM-DD');
       firebase.database()
@@ -71,6 +74,7 @@ export default class {
           dayCounts[i] = snapshot.val();
         });
     }
+    // daysCounts[0] や daysCounts[1]などがundefinedになってしまいます。
     console.log(dayCounts);
     return dayCounts;
   }
