@@ -53,28 +53,43 @@ export default class {
   }
 
   // DBに本日の記録を書き込む
-  writeDB(value, day) {
+  writeDB(value) {
+    const time = moment();
+    const startOfToday = time.startOf('day');
+    const startOfTodayClone = moment(startOfToday);
+    const valOfToday = startOfTodayClone.valueOf();
     const { uid } = firebase.auth().currentUser;
     firebase
       .database()
-      .ref(`history/${uid}/${day}`)
+      .ref(`history/${uid}/${valOfToday}`)
       .set(value);
   }
 
+
   // DBから記録を取得する
-  readDB() {
-    const { uid } = firebase.auth().currentUser;
-    const dayCounts = [];
-    // 8日分取得する 0番目は本日の記録 1~7番目が過去の記録
-    for (let i = 0; i < 8; i += 1) {
-      const days = moment().subtract(i, 'days').format('YYYY-MM-DD');
-      firebase.database()
-        .ref(`history/${uid}/${days}`)
-        .on('value', (snapshot) => {
-          dayCounts[i] = snapshot.val();
-        });
-    }
-    // daysCounts[0] や daysCounts[1]などがundefinedになってしまいます。
+  async readDB() {
+    let dayCounts;
+    await firebase.auth().onAuthStateChanged(async (user) => {
+      if (user) {
+        const { uid } = firebase.auth().currentUser;
+        const time = moment();
+        const startOfToday = time.startOf('day');
+        const startOfTodayClone = moment(startOfToday);
+        const oneDayAgo = startOfTodayClone.subtract(1, 'days');
+        const valOfOneDayAgo = oneDayAgo.valueOf();
+        const sevenDaysAgo = startOfTodayClone.subtract(7, 'days');
+        const valOfSevenDaysAgo = sevenDaysAgo.valueOf();
+        await firebase.database()
+          .ref(`history/${uid}`)
+          .orderByKey()
+          .startAt(valOfSevenDaysAgo.toString())
+          .endAt(valOfOneDayAgo.toString())
+          .on('value', async (snapshot) => {
+            dayCounts = await snapshot.val();
+          });
+      }
+    });
+    // awaitでdayCountsに値が入ると思っていたのですが、結果入りませんでした
     console.log(dayCounts);
     return dayCounts;
   }

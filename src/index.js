@@ -89,8 +89,7 @@ class App {
 
   // 過去の記録を取得
   showUserRecord() {
-    const collection = firebase.readDB();
-    console.log(collection[0]);
+    // firebase.readDB();
   }
 
   async showUserState() {
@@ -268,6 +267,14 @@ class App {
   }
 
   displayHistory(time = moment()) {
+    firebase.userState()
+      .then(() => {
+        const result = firebase.readDB();
+        console.log(result);
+        if (Object.keys(result).length !== 0) {
+          console.log(result);
+        }
+      });
     const collection = this.getHistory();
     const startOfToday = time.startOf('day');
     const startOfTodayClone = moment(startOfToday);
