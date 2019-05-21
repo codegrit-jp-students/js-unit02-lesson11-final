@@ -18,6 +18,11 @@ const config = {
 firebase.initializeApp(config);
 
 export default class {
+  // constructor() {
+  //   const testData = this.readDB.bind(this);
+  //   console.log(testData);
+  // }
+
   userState() {
     return new Promise((resolve) => {
       firebase.auth().onAuthStateChanged(user => resolve(user));
@@ -68,29 +73,26 @@ export default class {
 
   // DBから記録を取得する
   async readDB() {
-    let dayCounts;
-    await firebase.auth().onAuthStateChanged(async (user) => {
-      if (user) {
-        const { uid } = firebase.auth().currentUser;
-        const time = moment();
-        const startOfToday = time.startOf('day');
-        const startOfTodayClone = moment(startOfToday);
-        const oneDayAgo = startOfTodayClone.subtract(1, 'days');
-        const valOfOneDayAgo = oneDayAgo.valueOf();
-        const sevenDaysAgo = startOfTodayClone.subtract(7, 'days');
-        const valOfSevenDaysAgo = sevenDaysAgo.valueOf();
-        await firebase.database()
-          .ref(`history/${uid}`)
-          .orderByKey()
-          .startAt(valOfSevenDaysAgo.toString())
-          .endAt(valOfOneDayAgo.toString())
-          .on('value', async (snapshot) => {
-            dayCounts = await snapshot.val();
-          });
-      }
-    });
-    // awaitでdayCountsに値が入ると思っていたのですが、結果入りませんでした
-    console.log(dayCounts);
-    return dayCounts;
+    const userid = firebase.auth().currentUser.uid;
+    const time = moment();
+    const startOfToday = time.startOf('day');
+    const startOfTodayClone = moment(startOfToday);
+    const oneDayAgo = startOfTodayClone.subtract(1, 'days');
+    const valOfOneDayAgo = oneDayAgo.valueOf();
+    const sevenDaysAgo = startOfTodayClone.subtract(7, 'days');
+    const valOfSevenDaysAgo = sevenDaysAgo.valueOf();
+    // const TodayClone = moment(time.startOf('day'));
+    // const someDaysAgo = TodayClone.subtract(7, 'days');
+    // const valOfSomeDaysAgo = someDaysAgo.valueOf();
+    let val;
+    await firebase.database()
+      .ref(`history/${userid}`)
+      .orderByKey()
+      .startAt(valOfSevenDaysAgo.toString())
+      .endAt(valOfOneDayAgo.toString())
+      .once('value', (snapshot) => {
+        val = snapshot.val();
+      });
+    return val;
   }
 }

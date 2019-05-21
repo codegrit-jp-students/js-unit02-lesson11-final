@@ -5,7 +5,7 @@ import Firebase from './firebase';
 
 const SECOND = 1000;
 const MINUTE = 60 * SECOND;
-const DAY = 24 * 60 * MINUTE;
+// const DAY = 24 * 60 * MINUTE;
 const firebase = new Firebase();
 class App {
   constructor() {
@@ -20,6 +20,7 @@ class App {
     this.displayCyclesToday = this.displayCyclesToday.bind(this);
     this.displayHistory = this.displayHistory.bind(this);
     this.userState = firebase.userState.bind(this);
+    // this.loginOrNot = firebase.loginOrNot.bind(this);
 
     this.resetValues();
     this.getElements();
@@ -176,7 +177,6 @@ class App {
     this.timerUpdater = window.setInterval(this.updateTimer, 500);
     // タイムラグがあるので、0.5秒ごとにアップデートします。
     this.displayTime();
-    // firebase.writeDB();
   }
 
   updateTimer(time = moment()) {
@@ -266,31 +266,45 @@ class App {
     this.percentOfTodayDisplay.innerHTML = `目標を${percent}％達成中です。`;
   }
 
-  displayHistory(time = moment()) {
-    firebase.userState()
-      .then(() => {
-        const result = firebase.readDB();
-        console.log(result);
-        if (Object.keys(result).length !== 0) {
-          console.log(result);
-        }
+  async displayHistory(time = moment()) {
+    let dayCounts;
+    await firebase.userState()
+      .then(async () => {
+        await firebase.readDB().then((val) => {
+          dayCounts = val;
+        });
       });
-    const collection = this.getHistory();
     const startOfToday = time.startOf('day');
     const startOfTodayClone = moment(startOfToday);
     const sevenDaysAgo = startOfTodayClone.subtract(7, 'days');
-    const valOfSevenDaysAgo = sevenDaysAgo.valueOf();
+    // const valOfSevenDaysAgo = sevenDaysAgo.valueOf();
     const tableEl = document.createElement('table');
     tableEl.classList.add('table', 'table-bordered');
     const trElDate = document.createElement('tr');
     const trElCount = document.createElement('tr');
+
+    const countArray = [];
+    for (let i = 0; i <= 8; i += 1) {
+      countArray[i] = dayCounts[moment(time.startOf('day')).subtract(i + 1, 'days').valueOf()];
+    }
+    // const newCollection = collection.filter((item) => {
+    //   console.log(item);
+    //   const timestampOfItem = parseInt(item, 10);
+    //   return timestampOfItem >= sevenDaysAgo;
+    // });
+    // console.log(newCollection);
+
     for (let i = 0; i <= 6; i += 1) {
-      const filterItems = collection.filter((item) => {
-        const timestampOfItem = parseInt(item, 10);
-        return timestampOfItem >= valOfSevenDaysAgo + i * DAY
-          && timestampOfItem < valOfSevenDaysAgo + (i + 1) * DAY;
-      });
-      const count = filterItems.length;
+      // const filterItems = collection.filter((item) => {
+      //   const timestampOfItem = parseInt(item, 10);
+      //   return timestampOfItem >= valOfSevenDaysAgo + i * DAY
+      //     && timestampOfItem < valOfSevenDaysAgo + (i + 1) * DAY;
+      // });
+      // const count = filterItems.length;
+      let count = countArray[i];
+      if (countArray[i] === undefined) {
+        count = 0;
+      }
       const thElDate = document.createElement('th');
       const tdElCount = document.createElement('td');
       const sevenDaysAgoCloen = moment(sevenDaysAgo);
