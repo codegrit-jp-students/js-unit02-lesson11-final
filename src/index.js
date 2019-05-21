@@ -267,6 +267,7 @@ class App {
   }
 
   async displayHistory(time = moment()) {
+    // console.log(firebase.loginOrNot());
     let dayCounts;
     await firebase.userState()
       .then(async () => {
