@@ -284,9 +284,12 @@ class App {
     const trElDate = document.createElement('tr');
     const trElCount = document.createElement('tr');
 
+    // console.log(dayCounts);
     const countArray = [];
-    for (let i = 0; i <= 8; i += 1) {
-      countArray[i] = dayCounts[moment(time.startOf('day')).subtract(i + 1, 'days').valueOf()];
+    if (dayCounts) {
+      for (let i = 0; i <= 8; i += 1) {
+        countArray[i] = dayCounts[moment(time.startOf('day')).subtract(i + 1, 'days').valueOf()];
+      }
     }
     // const newCollection = collection.filter((item) => {
     //   console.log(item);
