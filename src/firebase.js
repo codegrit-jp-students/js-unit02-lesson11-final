@@ -97,18 +97,9 @@ export default class {
   }
 
   // ログインしているかいないかの真偽値返すメソッド
-  async loginOrNot() {
-    let loginBoolean;
-    await this.userState()
-      .then(async () => {
-        const userid = await firebase.auth().currentUser;
-        if (userid) {
-          loginBoolean = true;
-        }
-        if (!userid) {
-          loginBoolean = false;
-        }
-      });
-    return loginBoolean;
+  async isLoggedin() {
+    const user = await this.userState();
+    if (user) return true;
+    return false;
   }
 }

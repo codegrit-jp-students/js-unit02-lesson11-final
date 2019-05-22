@@ -267,14 +267,14 @@ class App {
   }
 
   async displayHistory(time = moment()) {
-    // console.log(firebase.loginOrNot());
+    const isLoggedin = await firebase.isLoggedin();
+    console.log(isLoggedin);
     let dayCounts;
-    await firebase.userState()
-      .then(async () => {
-        await firebase.readDB().then((val) => {
-          dayCounts = val;
-        });
+    if (isLoggedin) {
+      await firebase.readDB().then((val) => {
+        dayCounts = val;
       });
+    }
     const startOfToday = time.startOf('day');
     const startOfTodayClone = moment(startOfToday);
     const sevenDaysAgo = startOfTodayClone.subtract(7, 'days');
