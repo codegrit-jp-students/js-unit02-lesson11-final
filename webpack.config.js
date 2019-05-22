@@ -1,6 +1,11 @@
 const path = require('path');
 const webpack = require('webpack');
 
+let envPath = '.env';
+if (process.env.BUILD_ENV === 'prod') envPath = '.env.production';
+
+const dotenv = require('dotenv').config({ path: path.resolve(__dirname, envPath) });
+
 module.exports = {
   mode: 'development',
   entry: './src/index.js',
@@ -36,5 +41,8 @@ module.exports = {
   },
   plugins: [
     new webpack.HotModuleReplacementPlugin(),
+    new webpack.DefinePlugin({
+      'process.env': JSON.stringify(dotenv.parsed),
+    }),
   ],
 };
